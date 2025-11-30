@@ -3,24 +3,26 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>SINGULARITY TYCOON v4.0 👁️</title>
+    <title>SINGULARITY TYCOON v5.0 // C++ CORE</title>
     <link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@400;600;700&display=swap" rel="stylesheet">
     <style>
         :root {
-            --bg: #030305;
+            --bg: #050508;
             --primary: #fcee0a; /* Cyber Yellow */
-            --primary-dim: rgba(252, 238, 10, 0.2);
+            --primary-dim: rgba(252, 238, 10, 0.15);
             --accent: #00d9f7; /* Cyan */
+            --accent-dim: rgba(0, 217, 247, 0.15);
             --danger: #ff2a6d;
+            --success: #05ffa1;
             --text: #e0e0e0;
-            --panel: rgba(20, 20, 25, 0.85);
-            --border: 1px solid rgba(255, 255, 255, 0.15);
+            --panel: rgba(20, 20, 30, 0.92);
+            --border: 1px solid rgba(255, 255, 255, 0.1);
         }
 
         * { box-sizing: border-box; user-select: none; outline: none; -webkit-tap-highlight-color: transparent; }
 
         body {
-            font-family: 'Rajdhani', sans-serif;
+            font-family: 'Rajdhani', monospace;
             background-color: var(--bg);
             color: var(--text);
             margin: 0;
@@ -30,25 +32,42 @@
             flex-direction: column;
         }
 
-        /* --- CRT SCANLINE EFFECT --- */
+        /* --- EFFECTS --- */
         .scanlines {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: linear-gradient(to bottom, rgba(255,255,255,0), rgba(255,255,255,0) 50%, rgba(0,0,0,0.1) 50%, rgba(0,0,0,0.1));
+            background: linear-gradient(to bottom, rgba(255,255,255,0), rgba(255,255,255,0) 50%, rgba(0,0,0,0.2) 50%, rgba(0,0,0,0.2));
             background-size: 100% 4px;
-            pointer-events: none; z-index: 999; opacity: 0.6;
+            pointer-events: none; z-index: 999; opacity: 0.4;
+        }
+
+        .crt-flicker {
+            animation: flicker 0.15s infinite;
+            pointer-events: none; position: fixed; top:0; left:0; width:100%; height:100%;
+            background: rgba(255,255,255,0.02); opacity: 0; z-index: 998;
+        }
+        @keyframes flicker {
+            0% { opacity: 0.01; } 50% { opacity: 0.03; } 100% { opacity: 0.01; }
         }
 
         /* --- UI COMPONENTS --- */
         .btn {
             background: var(--primary); color: #000;
-            border: none; padding: 10px 20px;
+            border: none; padding: 12px 24px;
             font-family: 'Rajdhani', sans-serif; font-weight: 700; text-transform: uppercase;
-            letter-spacing: 1px; cursor: pointer;
-            clip-path: polygon(10px 0, 100% 0, 100% calc(100% - 10px), calc(100% - 10px) 100%, 0 100%, 0 10px);
-            transition: all 0.1s;
+            font-size: 1rem; letter-spacing: 2px; cursor: pointer;
+            clip-path: polygon(15px 0, 100% 0, 100% calc(100% - 15px), calc(100% - 15px) 100%, 0 100%, 0 15px);
+            transition: all 0.2s cubic-bezier(0.23, 1, 0.32, 1);
+            position: relative; overflow: hidden;
         }
-        .btn:active { transform: translateY(2px); background: #fff; }
-        .btn:disabled { background: #333; color: #555; cursor: not-allowed; transform: none; }
+        .btn::after {
+            content:''; position: absolute; top:0; left:-100%; width:100%; height:100%;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.4), transparent);
+            transition: 0.4s;
+        }
+        .btn:hover { background: #fff; transform: translateY(-2px); box-shadow: 0 5px 15px var(--primary-dim); }
+        .btn:hover::after { left: 100%; }
+        .btn:active { transform: translateY(1px); }
+        .btn:disabled { background: #333; color: #555; cursor: not-allowed; transform: none; box-shadow: none; }
         
         .btn-glitch {
             background: var(--danger); color: #fff;
@@ -58,22 +77,25 @@
         /* --- HEADER --- */
         header {
             display: flex; justify-content: space-between; align-items: center;
-            padding: 15px 20px;
-            background: var(--panel); border-bottom: 1px solid rgba(255,255,255,0.1);
-            backdrop-filter: blur(5px); z-index: 10;
+            padding: 15px 30px;
+            background: var(--panel); border-bottom: 1px solid rgba(255,255,255,0.05);
+            backdrop-filter: blur(10px); z-index: 100;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.5);
         }
+        .currency-wrapper { display: flex; gap: 40px; }
         .currency-box { display: flex; flex-direction: column; }
-        .label { font-size: 0.7rem; color: #888; letter-spacing: 2px; text-transform: uppercase; }
-        .val-main { font-size: 1.8rem; font-weight: 700; color: var(--primary); text-shadow: 0 0 10px var(--primary-dim); }
-        .val-sec { font-size: 0.9rem; color: var(--accent); }
+        .label { font-size: 0.75rem; color: #666; letter-spacing: 2px; text-transform: uppercase; margin-bottom: 2px; }
+        .val-main { font-size: 2rem; font-weight: 700; color: var(--primary); text-shadow: 0 0 15px var(--primary-dim); letter-spacing: 1px; }
+        .val-sec { font-size: 1.2rem; font-weight: 700; color: var(--accent); text-shadow: 0 0 10px var(--accent-dim); }
 
-        .sys-btns { display: flex; gap: 10px; }
+        .sys-btns { display: flex; gap: 15px; }
         .icon-box { 
-            width: 40px; height: 40px; border: var(--border); display: flex; 
-            align-items: center; justify-content: center; cursor: pointer; color: var(--accent);
-            background: rgba(0,0,0,0.3); transition: 0.2s;
+            width: 45px; height: 45px; border: var(--border); display: flex;
+            align-items: center; justify-content: center; cursor: pointer; color: #888;
+            background: rgba(0,0,0,0.2); transition: 0.3s; font-size: 1.2rem;
+            border-radius: 4px;
         }
-        .icon-box:hover { background: var(--accent); color: #000; }
+        .icon-box:hover { background: var(--accent); color: #000; border-color: var(--accent); box-shadow: 0 0 15px var(--accent-dim); }
 
         /* --- MAIN LAYOUT --- */
         main { flex: 1; display: flex; position: relative; overflow: hidden; }
@@ -82,156 +104,247 @@
         #visual-sector {
             flex: 1; display: flex; flex-direction: column; 
             align-items: center; justify-content: center; position: relative;
+            background: radial-gradient(circle at center, rgba(30,30,40,0.5) 0%, transparent 70%);
         }
         
+        #core-container { position: relative; display: flex; flex-direction: column; align-items: center; }
+
         #core-btn {
-            width: 200px; height: 200px;
-            border: 2px solid var(--primary);
+            width: 240px; height: 240px;
+            border: 2px solid rgba(252,238,10,0.3);
             border-radius: 50%;
-            background: radial-gradient(circle, rgba(252,238,10,0.1) 0%, rgba(0,0,0,0.8) 70%);
-            box-shadow: 0 0 30px var(--primary-dim), inset 0 0 20px var(--primary-dim);
+            background: radial-gradient(circle, rgba(252,238,10,0.15) 0%, rgba(0,0,0,0.9) 70%);
+            box-shadow: 0 0 40px var(--primary-dim), inset 0 0 30px var(--primary-dim);
             display: flex; align-items: center; justify-content: center;
             cursor: pointer; position: relative; z-index: 5;
-            transition: transform 0.05s;
+            transition: transform 0.08s cubic-bezier(0.175, 0.885, 0.32, 1.275);
         }
-        #core-btn:active { transform: scale(0.95); }
-        #core-btn i { font-size: 4rem; font-style: normal; text-shadow: 0 0 10px #fff; }
+        #core-btn::before {
+            content:''; position: absolute; width: 110%; height: 110%;
+            border: 1px dashed var(--primary); border-radius: 50%;
+            animation: spin 20s linear infinite; opacity: 0.3;
+        }
+        @keyframes spin { 100% { transform: rotate(360deg); } }
+
+        #core-btn:active { transform: scale(0.92); }
+        #core-btn i { font-size: 5rem; font-style: normal; text-shadow: 0 0 20px #fff; filter: drop-shadow(0 0 10px var(--primary)); }
+
+        .income-rate {
+            margin-top: 30px; font-size: 1.1rem; color: #888; font-weight: 600;
+            background: rgba(0,0,0,0.6); padding: 5px 15px; border-radius: 20px;
+            border: 1px solid rgba(255,255,255,0.05);
+        }
 
         #hacking-terminal {
-            position: absolute; bottom: 20px; left: 20px;
-            padding: 10px 20px; border: 1px solid var(--accent);
-            color: var(--accent); font-size: 0.8rem; background: rgba(0,0,0,0.8);
-            cursor: pointer; display: none;
-            animation: blink-border 1s infinite;
+            position: absolute; bottom: 40px;
+            padding: 12px 30px; border: 1px solid var(--accent);
+            color: var(--accent); font-weight: 600; letter-spacing: 1px;
+            background: rgba(0,217,247,0.1); backdrop-filter: blur(5px);
+            cursor: pointer; display: none; text-transform: uppercase;
+            animation: pulse-border 1.5s infinite;
+            clip-path: polygon(10px 0, 100% 0, 100% calc(100% - 10px), calc(100% - 10px) 100%, 0 100%, 0 10px);
         }
-        @keyframes blink-border { 50% { border-color: transparent; color: #fff; } }
+        @keyframes pulse-border { 0% { box-shadow: 0 0 0 0 rgba(0,217,247,0.4); } 70% { box-shadow: 0 0 0 10px rgba(0,217,247,0); } 100% { box-shadow: 0 0 0 0 rgba(0,217,247,0); } }
 
         /* RIGHT: DATA */
         #data-sector {
-            width: 400px; background: var(--panel); border-left: 1px solid rgba(255,255,255,0.1);
+            width: 450px; background: var(--panel);
+            border-left: 1px solid rgba(255,255,255,0.08);
             display: flex; flex-direction: column; z-index: 20;
+            box-shadow: -10px 0 30px rgba(0,0,0,0.5);
         }
-        @media(max-width: 800px) {
+        @media(max-width: 900px) {
             main { flex-direction: column; }
-            #data-sector { width: 100%; height: 60%; position: absolute; bottom: 0; border-top: 1px solid var(--primary); }
+            #data-sector { width: 100%; height: 60%; position: absolute; bottom: 0; border-top: 1px solid var(--primary); border-left: none; }
             #visual-sector { height: 40%; }
-            #core-btn { width: 160px; height: 160px; }
+            #core-btn { width: 150px; height: 150px; }
+            #core-btn i { font-size: 3rem; }
+            .header { padding: 10px 15px; }
         }
 
-        .tabs { display: flex; background: rgba(0,0,0,0.5); }
-        .tab { flex: 1; padding: 15px; text-align: center; color: #666; cursor: pointer; text-transform: uppercase; font-weight: 600; letter-spacing: 1px; transition: 0.3s; border-bottom: 2px solid transparent; }
-        .tab.active { color: var(--primary); border-bottom-color: var(--primary); background: rgba(252,238,10,0.05); }
+        .tabs { display: flex; background: rgba(0,0,0,0.3); border-bottom: 1px solid rgba(255,255,255,0.05); }
+        .tab {
+            flex: 1; padding: 18px; text-align: center; color: #666;
+            cursor: pointer; text-transform: uppercase; font-weight: 700; letter-spacing: 1.5px;
+            transition: 0.3s; position: relative;
+        }
+        .tab:hover { color: #aaa; background: rgba(255,255,255,0.02); }
+        .tab.active { color: var(--primary); background: rgba(252,238,10,0.03); }
+        .tab.active::after {
+            content:''; position: absolute; bottom:0; left:0; width:100%; height:3px;
+            background: var(--primary); box-shadow: 0 -2px 10px var(--primary);
+        }
 
-        .scroll-area { flex: 1; overflow-y: auto; padding: 10px; }
+        .scroll-area {
+            flex: 1; overflow-y: auto; padding: 20px;
+            scrollbar-width: thin; scrollbar-color: #333 #000;
+        }
+        .scroll-area::-webkit-scrollbar { width: 6px; }
+        .scroll-area::-webkit-scrollbar-track { background: #000; }
+        .scroll-area::-webkit-scrollbar-thumb { background: #333; }
         
         /* ITEMS */
         .card {
             background: linear-gradient(90deg, rgba(255,255,255,0.03), transparent);
-            border-left: 2px solid #333; padding: 10px; margin-bottom: 8px;
-            display: flex; align-items: center; gap: 10px; transition: 0.2s; cursor: pointer;
+            border: 1px solid rgba(255,255,255,0.05);
+            border-left: 3px solid #333;
+            padding: 15px; margin-bottom: 10px;
+            display: flex; align-items: center; gap: 15px; transition: all 0.2s; cursor: pointer;
+            position: relative; overflow: hidden;
         }
-        .card:hover { border-left-color: var(--primary); background: rgba(255,255,255,0.05); }
-        .card.locked { opacity: 0.4; filter: grayscale(1); pointer-events: none; }
+        .card:hover {
+            border-left-color: var(--primary);
+            background: linear-gradient(90deg, rgba(252,238,10,0.05), transparent);
+            transform: translateX(5px);
+        }
+        .card:active { transform: translateX(2px); }
+        .card.locked { opacity: 0.3; filter: grayscale(1); pointer-events: none; }
         
-        .card-icon { font-size: 1.5rem; width: 40px; text-align: center; }
+        .card-icon { font-size: 2rem; width: 50px; text-align: center; filter: drop-shadow(0 0 5px rgba(255,255,255,0.2)); }
         .card-info { flex: 1; }
-        .card-name { font-weight: 700; color: #fff; }
-        .card-cost { font-size: 0.8rem; color: var(--danger); }
-        .card-gain { font-size: 0.8rem; color: var(--accent); }
-        .card-lvl { font-size: 1.2rem; font-weight: 700; color: #444; margin-right: 10px; }
+        .card-name { font-weight: 700; font-size: 1.1rem; color: #fff; margin-bottom: 4px; }
+        .card-stats { display: flex; justify-content: space-between; font-size: 0.85rem; }
+        .card-cost { color: var(--danger); font-weight: 600; }
+        .card-gain { color: var(--success); }
+        .card-lvl {
+            font-size: 1.5rem; font-weight: 700; color: #333;
+            margin-left: 10px; width: 50px; text-align: right;
+        }
+        .card:hover .card-lvl { color: #555; }
 
         /* SKILL TREE */
-        .skill-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; padding: 10px; }
+        .skill-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; padding-bottom: 20px; }
         .skill-node {
-            border: 1px solid #444; padding: 15px; text-align: center; cursor: pointer; position: relative;
-            background: rgba(0,0,0,0.5); transition: 0.3s;
+            border: 1px solid #444; padding: 20px; text-align: center; cursor: pointer; position: relative;
+            background: rgba(0,0,0,0.4); transition: 0.3s; display: flex; flex-direction: column; justify-content: space-between;
+            min-height: 140px;
         }
-        .skill-node.bought { border-color: var(--success); box-shadow: 0 0 10px rgba(0,255,0,0.2); }
-        .skill-node:hover { border-color: var(--primary); }
+        .skill-node.bought {
+            border-color: var(--accent);
+            background: rgba(0,217,247,0.05);
+            box-shadow: 0 0 15px rgba(0,217,247,0.1);
+        }
+        .skill-node:hover { border-color: var(--primary); transform: translateY(-3px); }
+        .skill-name { font-weight:bold; color:var(--accent); margin-bottom: 10px; font-size: 1.1rem; }
+        .skill-desc { font-size:0.8rem; color: #888; margin-bottom: 15px; line-height: 1.4; }
+        .skill-cost { color: var(--danger); font-weight: bold; font-size: 0.9rem; margin-top: auto; }
+        .skill-node.bought .skill-cost { color: var(--success); }
         
         /* HACKING MINIGAME OVERLAY */
         #hack-overlay {
             position: fixed; top:0; left:0; width:100%; height:100%;
-            background: rgba(0,0,0,0.95); z-index: 200;
+            background: rgba(5,5,8,0.98); z-index: 200;
             display: none; flex-direction: column; align-items: center; justify-content: center;
         }
-        .grid-hack { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-top: 20px; }
+        .grid-hack { display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; margin-top: 30px; }
         .cell-hack {
-            width: 80px; height: 80px; border: 2px solid var(--accent);
+            width: 90px; height: 90px; border: 2px solid var(--accent);
             display: flex; align-items: center; justify-content: center;
-            font-size: 1.5rem; color: var(--accent); cursor: pointer;
-            transition: 0.2s;
+            font-size: 2rem; color: var(--accent); cursor: pointer;
+            transition: 0.2s; background: rgba(0,217,247,0.05);
+            font-family: 'Courier New', monospace; font-weight: bold;
         }
+        .cell-hack:hover { background: rgba(0,217,247,0.15); box-shadow: 0 0 15px var(--accent-dim); }
         .cell-hack:active { background: var(--accent); color: #000; }
-        .cell-hack.lit { background: var(--primary); color: #000; box-shadow: 0 0 20px var(--primary); border-color: var(--primary); }
+        .cell-hack.lit { background: var(--primary); color: #000; box-shadow: 0 0 30px var(--primary); border-color: var(--primary); transform: scale(1.05); }
 
         /* PARTICLES */
         .particle {
-            position: absolute; pointer-events: none; color: var(--primary); font-weight: bold;
-            animation: flyUp 0.8s forwards; font-size: 1.2rem; text-shadow: 0 0 5px var(--primary);
+            position: absolute; pointer-events: none; color: var(--primary); font-weight: 800;
+            animation: flyUp 1s cubic-bezier(0.215, 0.610, 0.355, 1.000) forwards;
+            font-size: 1.4rem; text-shadow: 0 0 5px var(--primary); z-index: 50;
         }
-        @keyframes flyUp { to { transform: translateY(-100px); opacity: 0; } }
+        @keyframes flyUp {
+            0% { transform: translateY(0) scale(1); opacity: 1; }
+            100% { transform: translateY(-150px) scale(1.5); opacity: 0; }
+        }
 
-        /* AUDIO START OVERLAY */
+        /* NOTIFICATIONS */
+        #notif-area {
+            position: fixed; bottom: 20px; right: 20px; z-index: 500;
+            display: flex; flex-direction: column; gap: 10px; align-items: flex-end;
+        }
+        .notif {
+            background: rgba(20,20,30,0.95); border-left: 4px solid var(--primary);
+            padding: 15px 25px; color: #fff; font-size: 0.9rem;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.5);
+            animation: slideIn 0.3s ease-out, fadeOut 0.5s 2.5s forwards;
+            backdrop-filter: blur(5px);
+        }
+        @keyframes slideIn { from { transform: translateX(100%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
+        @keyframes fadeOut { to { opacity: 0; transform: translateY(-10px); pointer-events: none; } }
+
+        /* MODAL */
         #start-screen {
             position: fixed; top:0; left:0; width:100%; height:100%;
-            background: #000; z-index: 500; display: flex; flex-direction: column;
+            background: #000; z-index: 2000; display: flex; flex-direction: column;
             align-items: center; justify-content: center;
+        }
+        .logo {
+            font-size: 4rem; color: var(--primary); text-shadow: 0 0 30px var(--primary);
+            margin-bottom: 10px; letter-spacing: 5px; font-weight: 800;
         }
     </style>
 </head>
 <body>
 
     <div class="scanlines"></div>
+    <div class="crt-flicker"></div>
+    <div id="notif-area"></div>
 
-    <!-- START SCREEN (REQUIRED FOR AUDIO CONTEXT) -->
+    <!-- START SCREEN -->
     <div id="start-screen">
-        <h1 style="font-size: 3rem; color: var(--primary); text-shadow: 0 0 20px var(--primary);">SINGULARITY</h1>
-        <p style="color: #666; margin-bottom: 30px;">TYCOON SIMULATION v4.0</p>
-        <button class="btn" style="font-size: 1.5rem;" onclick="startGame()">INICIAR SISTEMA</button>
+        <div class="logo">SINGULARITY</div>
+        <p style="color: #666; margin-bottom: 40px; letter-spacing: 3px;">TYCOON SIMULATION v5.0</p>
+        <button class="btn" style="font-size: 1.2rem; min-width: 200px;" onclick="Game.init()">INICIAR SISTEMA</button>
+        <p style="margin-top:20px; font-size: 0.7rem; color: #333;">POWERED BY C++ CORE ARCHITECTURE</p>
     </div>
 
     <!-- HACKING MINIGAME -->
     <div id="hack-overlay">
-        <h2 style="color:var(--accent)">ACESSO DE SEGURANÇA</h2>
-        <p id="hack-status">Memorize a sequência...</p>
-        <div class="grid-hack" id="hack-grid">
-            <!-- 9 cells generated by JS -->
-        </div>
+        <h2 style="color:var(--accent); font-size: 2rem; letter-spacing: 2px;">ACESSO DE SEGURANÇA</h2>
+        <p id="hack-status" style="color:#aaa;">Memorize a sequência...</p>
+        <div class="grid-hack" id="hack-grid"></div>
     </div>
 
     <header>
-        <div class="currency-box">
-            <span class="label">CREDITS (CR$)</span>
-            <div class="val-main" id="money-disp">0</div>
+        <div class="currency-wrapper">
+            <div class="currency-box">
+                <span class="label">CREDITS (CR$)</span>
+                <div class="val-main" id="money-disp">0.00</div>
+            </div>
+            <div class="currency-box">
+                <span class="label">NEURAL DATA</span>
+                <div class="val-sec" id="prestige-disp">0</div>
+            </div>
         </div>
-        <div class="currency-box" style="align-items: flex-end;">
-            <span class="label">NEURAL DATA (ND)</span>
-            <div class="val-sec" style="color:var(--danger); font-size: 1.2rem;" id="prestige-disp">0</div>
-        </div>
+
         <div class="sys-btns">
-            <div class="icon-box" onclick="toggleMute()" id="mute-btn">🔊</div>
-            <div class="icon-box" onclick="saveGame(true)">💾</div>
+            <div class="icon-box" onclick="AudioSys.toggle()" id="mute-btn" title="Toggle Audio">🔊</div>
+            <div class="icon-box" onclick="Game.save(true)" title="Save System">💾</div>
         </div>
     </header>
 
     <main>
         <section id="visual-sector">
-            <div id="core-btn" onpointerdown="manualMine(event)">
-                <i>💠</i>
+            <div id="core-container">
+                <div id="core-btn" onpointerdown="Game.manualMine(event)">
+                    <i>💠</i>
+                </div>
             </div>
-            <div style="margin-top: 20px; color: #666; font-size: 0.8rem;" id="gps-disp">0 CR$/s</div>
             
-            <button id="hacking-terminal" onclick="startHack()">
+            <div class="income-rate" id="gps-disp">0.00 CR$/s</div>
+
+            <button id="hacking-terminal" onclick="HackSys.start()">
                 ⚠️ ANOMALIA DETECTADA // CLIQUE PARA HACKEAR
             </button>
         </section>
 
         <section id="data-sector">
             <div class="tabs">
-                <div class="tab active" onclick="setTab('infra')">INFRA</div>
-                <div class="tab" onclick="setTab('neural')">NEURAL</div>
-                <div class="tab" onclick="setTab('sys')">SYSTEM</div>
+                <div class="tab active" onclick="UI.setTab('infra', event)">INFRA</div>
+                <div class="tab" onclick="UI.setTab('neural', event)">NEURAL</div>
+                <div class="tab" onclick="UI.setTab('sys', event)">SYSTEM</div>
             </div>
 
             <!-- TAB: INFRASTRUCTURE -->
@@ -241,40 +354,85 @@
 
             <!-- TAB: NEURAL (SKILLS) -->
             <div id="tab-neural" class="scroll-area" style="display:none;">
-                <div style="padding:10px; background: rgba(255,42,109,0.1); border: 1px solid var(--danger); margin-bottom: 15px;">
-                    <div style="color:var(--danger); font-weight:bold;">REINICIAR A SIMULAÇÃO</div>
-                    <p style="font-size:0.8rem;">Converta seus bens em Neural Data. (Min: 1M CR$)</p>
+                <div style="padding:20px; background: rgba(255,42,109,0.08); border: 1px solid var(--danger); margin-bottom: 25px; border-radius: 4px;">
+                    <div style="color:var(--danger); font-weight:bold; font-size: 1.1rem; margin-bottom: 5px;">REINICIAR A SIMULAÇÃO</div>
+                    <p style="font-size:0.85rem; color: #ccc; margin-bottom: 15px;">Converta seus bens em Neural Data para adquirir melhorias permanentes. (Min: 1M CR$)</p>
                     <div style="display:flex; justify-content:space-between; align-items:center;">
-                        <span id="prestige-potential" style="font-size:1.2rem; font-weight:bold;">+0 ND</span>
-                        <button class="btn" style="background:var(--danger); color:#fff; font-size:0.8rem;" onclick="doPrestige()">RESETAR</button>
+                        <span id="prestige-potential" style="font-size:1.4rem; font-weight:bold; color: #fff;">+0 ND</span>
+                        <button class="btn" style="background:var(--danger); color:#fff; font-size:0.8rem; padding: 8px 16px;" onclick="Game.doPrestige()">RESETAR</button>
                     </div>
                 </div>
-                <h3 style="color:var(--accent); border-bottom:1px solid #333;">ARVORE DE HABILIDADES</h3>
+
+                <h3 style="color:var(--accent); border-bottom:1px solid rgba(255,255,255,0.1); padding-bottom: 10px; margin-bottom: 20px;">ARVORE DE HABILIDADES</h3>
                 <div class="skill-grid" id="skills-list"></div>
             </div>
 
             <!-- TAB: SYSTEM -->
             <div id="tab-sys" class="scroll-area" style="display:none; text-align:center;">
-                <h2 style="color:var(--primary)">ESTATÍSTICAS</h2>
-                <p>Tempo Online: <span id="stat-time">0</span>s</p>
-                <p>Cliques Totais: <span id="stat-clicks">0</span></p>
-                <p>Ganhos Totais: <span id="stat-earnings">0</span></p>
-                <hr style="border-color:#333">
-                <button class="btn" style="background:#333; color:#fff; width:100%; margin-top:20px;" onclick="hardReset()">WIPE SAVE DATA</button>
+                <h2 style="color:var(--primary); letter-spacing: 2px;">ESTATÍSTICAS</h2>
+                <div style="text-align: left; background: rgba(0,0,0,0.3); padding: 20px; border-radius: 4px; margin-bottom: 20px;">
+                    <p style="display: flex; justify-content: space-between;"><span>Tempo Online:</span> <span id="stat-time" style="color: #fff;">0s</span></p>
+                    <p style="display: flex; justify-content: space-between;"><span>Cliques Totais:</span> <span id="stat-clicks" style="color: #fff;">0</span></p>
+                    <p style="display: flex; justify-content: space-between;"><span>Ganhos Totais:</span> <span id="stat-earnings" style="color: #fff;">0</span></p>
+                    <p style="display: flex; justify-content: space-between;"><span>Hacks Completos:</span> <span id="stat-hacks" style="color: #fff;">0</span></p>
+                </div>
+                <hr style="border-color:rgba(255,255,255,0.1)">
+                <button class="btn" style="background:#333; color:#aaa; width:100%; margin-top:20px; border: 1px solid #444;" onclick="Game.hardReset()">WIPE SAVE DATA</button>
+                <div style="margin-top: 50px; font-size: 0.7rem; color: #444;">ID: SYSTEM_V5_CPP_CORE_REF</div>
             </div>
         </section>
     </main>
 
     <script>
-        /* --- AUDIO ENGINE (PROCEDURAL) --- */
+        /**
+         * SINGULARITY TYCOON v5.0
+         * Professional Architecture Implementation
+         */
+
+        /* --- CONFIGURATION --- */
+        const CONFIG = {
+            tickRate: 1000 / 60, // 60 FPS
+            autoSaveInterval: 30000,
+            growthRate: 1.15,
+            prestigeDivisor: 1000000,
+        };
+
+        const DB = {
+            buildings: [
+                { id: 0, name: "Data Miner", cost: 15, income: 1, icon: "💾" },
+                { id: 1, name: "Bot Network", cost: 100, income: 5, icon: "🤖" },
+                { id: 2, name: "Server Rack", cost: 1100, income: 22, icon: "🔋" },
+                { id: 3, name: "AI Cluster", cost: 12000, income: 85, icon: "🧠" },
+                { id: 4, name: "Quantum Core", cost: 130000, income: 350, icon: "⚛️" },
+                { id: 5, name: "Dyson Swarm", cost: 1500000, income: 1500, icon: "☀️" },
+                { id: 6, name: "Reality Engine", cost: 25000000, income: 8000, icon: "🌀" },
+                { id: 7, name: "Dark Matter Syphon", cost: 350000000, income: 45000, icon: "🌌" }
+            ],
+            skills: [
+                { id: 'auto_click', name: "Auto-Clicker", cost: 5, desc: "Cliques automáticos 1x/s" },
+                { id: 'cheaper', name: "Otimização", cost: 10, desc: "Prédios 10% mais baratos" },
+                { id: 'offline', name: "Deep Sleep", cost: 15, desc: "Ganhos Offline x2" },
+                { id: 'hack_freq', name: "Backdoor", cost: 25, desc: "Hacks aparecem 2x mais rápido" },
+                { id: 'click_pow', name: "Overclock", cost: 50, desc: "Cliques valem 2x mais" }
+            ]
+        };
+
+        /* --- AUDIO SYSTEM --- */
         const AudioSys = {
             ctx: null,
             muted: false,
-            init: function() {
+
+            init() {
                 window.AudioContext = window.AudioContext || window.webkitAudioContext;
                 this.ctx = new AudioContext();
             },
-            playTone: function(freq, type, duration, vol=0.1) {
+
+            toggle() {
+                this.muted = !this.muted;
+                document.getElementById('mute-btn').innerText = this.muted ? "🔇" : "🔊";
+            },
+
+            playTone(freq, type, duration, vol=0.1) {
                 if (this.muted || !this.ctx) return;
                 const osc = this.ctx.createOscillator();
                 const gain = this.ctx.createGain();
@@ -287,358 +445,432 @@
                 osc.start();
                 osc.stop(this.ctx.currentTime + duration);
             },
-            playClick: function() { this.playTone(800 + Math.random()*200, 'sine', 0.1, 0.05); },
-            playBuy: function() { this.playTone(400, 'square', 0.1, 0.05); this.playTone(600, 'square', 0.2, 0.05); },
-            playError: function() { this.playTone(150, 'sawtooth', 0.3, 0.1); },
-            playHackWin: function() { 
-                [0, 100, 200].forEach(t => setTimeout(() => this.playTone(1000 + t, 'sine', 0.2, 0.1), t));
+
+            // Sound Library
+            playClick() { this.playTone(800 + Math.random()*200, 'sine', 0.1, 0.05); },
+            playBuy() { this.playTone(400, 'square', 0.1, 0.05); setTimeout(() => this.playTone(600, 'square', 0.2, 0.05), 100); },
+            playError() { this.playTone(150, 'sawtooth', 0.3, 0.1); },
+            playNotification() { this.playTone(1200, 'sine', 0.5, 0.05); },
+            playHackWin() {
+                [0, 100, 200].forEach((t, i) => setTimeout(() => this.playTone(1000 + (i*200), 'triangle', 0.2, 0.1), t));
             }
         };
 
-        /* --- DATA --- */
-        const DB = {
-            buildings: [
-                { id: 0, name: "Data Miner", cost: 15, income: 1, icon: "💾" },
-                { id: 1, name: "Bot Network", cost: 100, income: 5, icon: "🤖" },
-                { id: 2, name: "Server Rack", cost: 1100, income: 22, icon: "🔋" },
-                { id: 3, name: "AI Cluster", cost: 12000, income: 85, icon: "🧠" },
-                { id: 4, name: "Quantum Core", cost: 130000, income: 350, icon: "⚛️" },
-                { id: 5, name: "Dyson Swarm", cost: 1500000, income: 1500, icon: "☀️" },
-                { id: 6, name: "Reality Engine", cost: 25000000, income: 8000, icon: "🌀" }
-            ],
-            skills: [
-                { id: 'auto_click', name: "Auto-Clicker", cost: 5, desc: "Cliques automáticos 1x/s", max: 1 },
-                { id: 'cheaper', name: "Otimização", cost: 10, desc: "Prédios 10% mais baratos", max: 1 },
-                { id: 'offline', name: "Deep Sleep", cost: 15, desc: "Ganhos Offline x2", max: 1 },
-                { id: 'hack_freq', name: "Backdoor", cost: 25, desc: "Hacks aparecem mais rápido", max: 1 }
-            ]
+        /* --- UI MANAGER --- */
+        const UI = {
+            notify(msg) {
+                let div = document.createElement('div');
+                div.className = 'notif';
+                div.innerText = msg;
+                document.getElementById('notif-area').appendChild(div);
+                setTimeout(() => div.remove(), 3000);
+                AudioSys.playNotification();
+            },
+
+            setTab(id, e) {
+                ['infra', 'neural', 'sys'].forEach(t => document.getElementById('tab-'+t).style.display = 'none');
+                document.getElementById('tab-'+id).style.display = 'block';
+                document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+                if(e) e.target.classList.add('active');
+            },
+
+            spawnParticle(x, y, txt) {
+                let p = document.createElement('div');
+                p.className = 'particle';
+                p.style.left = x + 'px';
+                p.style.top = y + 'px';
+                p.innerText = txt;
+                document.body.appendChild(p);
+                setTimeout(() => p.remove(), 1000);
+            },
+
+            formatMoney(n) {
+                if (n < 1000) return n.toFixed(0);
+                let s = ["", "k", "M", "B", "T", "Qa", "Qi", "Sx"];
+                let t = Math.floor(Math.log10(n)/3);
+                if (t >= s.length) return "INF";
+                return (n / Math.pow(10, t*3)).toFixed(2) + s[t];
+            }
         };
 
-        /* --- STATE --- */
-        let game = {
-            money: 0,
-            neuralData: 0,
-            buildings: Array(DB.buildings.length).fill(0),
-            skills: {}, // { 'auto_click': 1 }
-            startTime: Date.now(),
-            stats: { clicks: 0, earnings: 0 }
-        };
+        /* --- GAME ENGINE --- */
+        const Game = {
+            state: {
+                money: 0,
+                neuralData: 0,
+                buildings: Array(DB.buildings.length).fill(0),
+                skills: {},
+                startTime: Date.now(),
+                lastSaveTime: Date.now(),
+                stats: { clicks: 0, earnings: 0, hacks: 0 }
+            },
 
-        let incomePerSec = 0;
-        let hackMultiplier = 1; // x10 during hack bonus
-        let hackTimer = 0;
-        let eventTimer = 0;
+            runtime: {
+                incomePerSec: 0,
+                hackMultiplier: 1,
+                hackTimer: 0,
+                eventTimer: 0,
+                loopId: null
+            },
 
-        /* --- INIT --- */
-        function startGame() {
-            document.getElementById('start-screen').style.display = 'none';
-            AudioSys.init();
-            loadGame();
-            renderUI();
-            requestAnimationFrame(loop);
-            setInterval(saveGame, 30000); // Auto save
-        }
+            init() {
+                document.getElementById('start-screen').style.display = 'none';
+                AudioSys.init();
+                this.load();
+                this.checkOfflineProgress();
+                this.renderAll();
+                this.startLoop();
+                setInterval(() => this.save(), CONFIG.autoSaveInterval);
+                UI.notify("SISTEMA ONLINE. BEM-VINDO, CEO.");
+            },
 
-        /* --- MAIN LOOP --- */
-        let lastTime = 0;
-        function loop(timestamp) {
-            if (!lastTime) lastTime = timestamp;
-            let dt = (timestamp - lastTime) / 1000;
-            lastTime = timestamp;
+            startLoop() {
+                let lastTime = 0;
+                const loop = (timestamp) => {
+                    if (!lastTime) lastTime = timestamp;
+                    let dt = (timestamp - lastTime) / 1000;
+                    lastTime = timestamp;
+                    this.update(dt);
+                    requestAnimationFrame(loop);
+                };
+                requestAnimationFrame(loop);
+            },
 
-            // Income Calc
-            let baseIncome = 0;
-            DB.buildings.forEach((b, i) => baseIncome += b.income * game.buildings[i]);
-            
-            // Skill: Auto Clicker
-            if (game.skills['auto_click']) {
-                baseIncome += (baseIncome * 0.05); // Auto click adds 5% DPS roughly
-            }
+            update(dt) {
+                // Calculate Income
+                let baseIncome = 0;
+                DB.buildings.forEach((b, i) => baseIncome += b.income * this.state.buildings[i]);
 
-            incomePerSec = baseIncome * hackMultiplier;
-            
-            // Apply Income
-            if (incomePerSec > 0) {
-                let gain = incomePerSec * dt;
-                addMoney(gain);
-            }
+                // Skill Bonuses
+                if (this.state.skills['auto_click']) baseIncome += (baseIncome * 0.05);
 
-            // Hack Bonus Timer
-            if (hackMultiplier > 1) {
-                hackTimer -= dt;
-                document.getElementById('gps-disp').style.color = 'var(--danger)';
-                document.getElementById('gps-disp').innerText = `🔥 HACK ATIVO: ${(hackTimer).toFixed(1)}s (x10) 🔥`;
-                if (hackTimer <= 0) {
-                    hackMultiplier = 1;
-                    document.getElementById('gps-disp').style.color = '#666';
+                this.runtime.incomePerSec = baseIncome * this.runtime.hackMultiplier;
+
+                // Add Money
+                if (this.runtime.incomePerSec > 0) {
+                    this.addMoney(this.runtime.incomePerSec * dt);
                 }
-            } else {
-                document.getElementById('gps-disp').innerText = formatMoney(incomePerSec) + " CR$/s";
+
+                // Timers
+                this.handleHackTimer(dt);
+                this.handleEventSpawn(dt);
+
+                // UI Updates
+                this.updateUI();
+            },
+
+            handleHackTimer(dt) {
+                if (this.runtime.hackMultiplier > 1) {
+                    this.runtime.hackTimer -= dt;
+                    let el = document.getElementById('gps-disp');
+                    el.style.color = 'var(--danger)';
+                    el.innerText = `🔥 HACK ATIVO: ${(this.runtime.hackTimer).toFixed(1)}s (x10) 🔥`;
+
+                    if (this.runtime.hackTimer <= 0) {
+                        this.runtime.hackMultiplier = 1;
+                        el.style.color = '#888';
+                        UI.notify("BÔNUS DE HACK EXPIRADO.");
+                    }
+                } else {
+                    document.getElementById('gps-disp').innerText = UI.formatMoney(this.runtime.incomePerSec) + " CR$/s";
+                }
+            },
+
+            handleEventSpawn(dt) {
+                this.runtime.eventTimer += dt;
+                let freq = this.state.skills['hack_freq'] ? 45 : 90;
+
+                if (this.runtime.eventTimer > freq) {
+                    if (Math.random() > 0.4) {
+                        document.getElementById('hacking-terminal').style.display = "block";
+                        UI.notify("ANOMALIA DETECTADA NA REDE!");
+                    }
+                    this.runtime.eventTimer = 0;
+                }
+            },
+
+            addMoney(amount) {
+                this.state.money += amount;
+                this.state.stats.earnings += amount;
+            },
+
+            manualMine(e) {
+                this.state.stats.clicks++;
+                let clickMult = this.state.skills['click_pow'] ? 2 : 1;
+
+                let val = (1 + (this.runtime.incomePerSec * 0.05)) * clickMult;
+                this.addMoney(val);
+
+                AudioSys.playClick();
+                UI.spawnParticle(e.clientX, e.clientY, "+" + UI.formatMoney(val));
+
+                // Button animation
+                let btn = document.getElementById('core-btn');
+                btn.style.transform = "scale(0.92)";
+                setTimeout(() => btn.style.transform = "scale(1)", 80);
+            },
+
+            buyBuilding(id) {
+                let b = DB.buildings[id];
+                let discount = this.state.skills['cheaper'] ? 0.9 : 1.0;
+                let count = this.state.buildings[id];
+                let cost = Math.floor(b.cost * Math.pow(CONFIG.growthRate, count) * discount);
+
+                if (this.state.money >= cost) {
+                    this.state.money -= cost;
+                    this.state.buildings[id]++;
+                    AudioSys.playBuy();
+                    this.renderBuildings();
+                } else {
+                    AudioSys.playError();
+                }
+            },
+
+            buySkill(id) {
+                let s = DB.skills.find(x => x.id === id);
+                if (this.state.neuralData >= s.cost && !this.state.skills[id]) {
+                    this.state.neuralData -= s.cost;
+                    this.state.skills[id] = 1;
+                    AudioSys.playBuy();
+                    this.renderSkills();
+                    UI.notify(`UPGRADE INSTALADO: ${s.name}`);
+                }
+            },
+
+            doPrestige() {
+                let potential = Math.floor(Math.sqrt(this.state.money / CONFIG.prestigeDivisor));
+                if (potential < 1) return;
+
+                if(confirm(`REINICIAR SIMULAÇÃO?\n\nVocê perderá todo o dinheiro e prédios.\nVocê ganhará ${potential} Neural Data.\nHabilidades serão mantidas.`)) {
+                    this.state.neuralData += potential;
+                    this.state.money = 0;
+                    this.state.buildings.fill(0);
+                    this.state.startTime = Date.now();
+                    this.save(true);
+                    location.reload();
+                }
+            },
+
+            checkOfflineProgress() {
+                let now = Date.now();
+                let diff = (now - this.state.lastSaveTime) / 1000;
+
+                if (diff > 60) { // More than 1 minute offline
+                    // Calculate offline rate (raw base income)
+                    let baseIncome = 0;
+                    DB.buildings.forEach((b, i) => baseIncome += b.income * this.state.buildings[i]);
+                    if (this.state.skills['auto_click']) baseIncome += (baseIncome * 0.05);
+
+                    // Offline penalty or bonus
+                    let offlineMult = this.state.skills['offline'] ? 1.0 : 0.5; // 50% usually, 100% with skill
+
+                    let earned = baseIncome * diff * offlineMult;
+                    if (earned > 0) {
+                        this.addMoney(earned);
+                        UI.notify(`OFFLINE POR ${Math.floor(diff)}s. GANHOU: ${UI.formatMoney(earned)} CR$`);
+                    }
+                }
+            },
+
+            /* --- SAVE/LOAD --- */
+            save(notify = false) {
+                this.state.lastSaveTime = Date.now();
+                localStorage.setItem('singularitySave_v5', JSON.stringify(this.state));
+                if(notify) UI.notify("DADOS SINCRONIZADOS.");
+            },
+
+            load() {
+                let d = localStorage.getItem('singularitySave_v5');
+                if(d) {
+                    try {
+                        let loaded = JSON.parse(d);
+                        // Merge safely
+                        this.state = { ...this.state, ...loaded, stats: { ...this.state.stats, ...loaded.stats } };
+                        // Fix array length if updates added buildings
+                        while (this.state.buildings.length < DB.buildings.length) this.state.buildings.push(0);
+                    } catch(e) {
+                        console.error("Save file corrupted");
+                    }
+                }
+            },
+
+            hardReset() {
+                if(confirm("TEM CERTEZA? ISSO APAGARÁ TODO O PROGRESSO.")) {
+                    localStorage.removeItem('singularitySave_v5');
+                    location.reload();
+                }
+            },
+
+            /* --- RENDERERS --- */
+            updateUI() {
+                // Throttle intense DOM updates if needed, but for text it's fine
+                document.getElementById('money-disp').innerText = UI.formatMoney(this.state.money);
+                document.getElementById('prestige-disp').innerText = this.state.neuralData;
+
+                let potential = Math.floor(Math.sqrt(this.state.money / CONFIG.prestigeDivisor));
+                document.getElementById('prestige-potential').innerText = "+" + potential + " ND";
+
+                // Stats
+                document.getElementById('stat-time').innerText = Math.floor((Date.now() - this.state.startTime)/1000) + "s";
+                document.getElementById('stat-clicks').innerText = this.state.stats.clicks;
+                document.getElementById('stat-earnings').innerText = UI.formatMoney(this.state.stats.earnings);
+                document.getElementById('stat-hacks').innerText = this.state.stats.hacks;
+
+                // Optimizing button states (opacity)
+                const discount = this.state.skills['cheaper'] ? 0.9 : 1.0;
+                DB.buildings.forEach((b, i) => {
+                    let cost = Math.floor(b.cost * Math.pow(CONFIG.growthRate, this.state.buildings[i]) * discount);
+                    let el = document.getElementById('b-card-'+i);
+                    if(el) {
+                        if (this.state.money < cost) {
+                            if (!el.classList.contains('locked')) el.classList.add('locked');
+                        } else {
+                            if (el.classList.contains('locked')) el.classList.remove('locked');
+                        }
+                    }
+                });
+            },
+
+            renderAll() {
+                this.renderBuildings();
+                this.renderSkills();
+            },
+
+            renderBuildings() {
+                let container = document.getElementById('buildings-list');
+                container.innerHTML = "";
+
+                const discount = this.state.skills['cheaper'] ? 0.9 : 1.0;
+
+                DB.buildings.forEach((b, i) => {
+                    let cost = Math.floor(b.cost * Math.pow(CONFIG.growthRate, this.state.buildings[i]) * discount);
+
+                    let div = document.createElement('div');
+                    div.className = "card";
+                    div.id = "b-card-"+i;
+                    if (this.state.money < cost) div.classList.add('locked');
+
+                    div.onclick = () => this.buyBuilding(i);
+                    div.innerHTML = `
+                        <div class="card-icon">${b.icon}</div>
+                        <div class="card-info">
+                            <div class="card-name">${b.name}</div>
+                            <div class="card-stats">
+                                <span class="card-cost">${UI.formatMoney(cost)} CR$</span>
+                                <span class="card-gain">+${UI.formatMoney(b.income)}/s</span>
+                            </div>
+                        </div>
+                        <div class="card-lvl">${this.state.buildings[i]}</div>
+                    `;
+                    container.appendChild(div);
+                });
+            },
+
+            renderSkills() {
+                let container = document.getElementById('skills-list');
+                container.innerHTML = "";
+                DB.skills.forEach(s => {
+                    let owned = this.state.skills[s.id];
+                    let div = document.createElement('div');
+                    div.className = "skill-node " + (owned ? "bought" : "");
+                    if (!owned) div.onclick = () => this.buySkill(s.id);
+
+                    div.innerHTML = `
+                        <div>
+                            <div class="skill-name">${s.name}</div>
+                            <div class="skill-desc">${s.desc}</div>
+                        </div>
+                        <div class="skill-cost">${owned ? "INSTALADO" : s.cost + " ND"}</div>
+                    `;
+                    container.appendChild(div);
+                });
             }
+        };
 
-            // Random Event Spawner
-            eventTimer += dt;
-            let freq = game.skills['hack_freq'] ? 45 : 90;
-            if (eventTimer > freq) { // Spawn hack every 45-90s
-                if (Math.random() > 0.5) showHackBtn();
-                eventTimer = 0;
-            }
+        /* --- HACK SYSTEM --- */
+        const HackSys = {
+            seq: [],
+            playerSeq: [],
 
-            // UI Updates (Throttled slightly could be better but modern browsers handle this)
-            updateDisplays();
-            
-            requestAnimationFrame(loop);
-        }
+            start() {
+                document.getElementById('hacking-terminal').style.display = "none";
+                document.getElementById('hack-overlay').style.display = "flex";
+                
+                let grid = document.getElementById('hack-grid');
+                grid.innerHTML = "";
+                for(let i=0; i<9; i++) {
+                    let d = document.createElement('div');
+                    d.className = 'cell-hack';
+                    d.id = 'hack-cell-'+i;
+                    d.innerText = Math.floor(Math.random()*99).toString(16).toUpperCase();
+                    d.onclick = () => this.check(i);
+                    grid.appendChild(d);
+                }
 
-        /* --- CORE FUNCTIONS --- */
-        function addMoney(amount) {
-            game.money += amount;
-            game.stats.earnings += amount;
-        }
+                this.runSequence();
+            },
 
-        function manualMine(e) {
-            game.stats.clicks++;
-            let val = 1 + (incomePerSec * 0.05); // Click = 5% of DPS
-            addMoney(val);
-            
-            AudioSys.playClick();
-            
-            // Visuals
-            spawnParticle(e.clientX, e.clientY, "+" + formatMoney(val));
-            let btn = document.getElementById('core-btn');
-            btn.style.transform = "scale(0.95)";
-            setTimeout(() => btn.style.transform = "scale(1)", 50);
-        }
+            async runSequence() {
+                this.seq = [];
+                this.playerSeq = [];
+                document.getElementById('hack-status').innerText = "CALIBRANDO...";
+                await new Promise(r => setTimeout(r, 800));
 
-        function buyBuilding(id) {
-            let b = DB.buildings[id];
-            let discount = game.skills['cheaper'] ? 0.9 : 1.0;
-            let cost = Math.floor(b.cost * Math.pow(1.15, game.buildings[id]) * discount);
+                document.getElementById('hack-status').innerText = "OBSERVE O PADRÃO";
 
-            if (game.money >= cost) {
-                game.money -= cost;
-                game.buildings[id]++;
-                AudioSys.playBuy();
-                renderBuildings();
-            } else {
-                AudioSys.playError();
-            }
-        }
+                // Sequence of 4
+                for(let i=0; i<4; i++) this.seq.push(Math.floor(Math.random()*9));
 
-        function buySkill(id) {
-            let s = DB.skills.find(x => x.id === id);
-            if (game.neuralData >= s.cost && !game.skills[id]) {
-                game.neuralData -= s.cost;
-                game.skills[id] = 1;
-                AudioSys.playBuy();
-                renderSkills();
-            }
-        }
+                // Play
+                for(let id of this.seq) {
+                    await new Promise(r => setTimeout(r, 500));
+                    let cell = document.getElementById('hack-cell-'+id);
+                    cell.classList.add('lit');
+                    AudioSys.playTone(600, 'square', 0.1);
+                    await new Promise(r => setTimeout(r, 300));
+                    cell.classList.remove('lit');
+                }
 
-        function doPrestige() {
-            let potential = Math.floor(Math.sqrt(game.money / 1000000));
-            if (potential < 1) return;
+                document.getElementById('hack-status').innerText = "INSIRA O CÓDIGO";
+                document.getElementById('hack-status').style.color = "#fff";
+            },
 
-            if(confirm("Reiniciar simulação? Você perderá Créditos e Prédios, mas ganhará Neural Data.")) {
-                game.neuralData += potential;
-                game.money = 0;
-                game.buildings.fill(0);
-                saveGame(true);
-                location.reload();
-            }
-        }
+            check(id) {
+                this.playerSeq.push(id);
+                AudioSys.playTone(800, 'sine', 0.1);
 
-        /* --- HACKING MINI-GAME --- */
-        function showHackBtn() {
-            let btn = document.getElementById('hacking-terminal');
-            btn.style.display = "block";
-        }
+                // Validate
+                let idx = this.playerSeq.length - 1;
+                if (this.playerSeq[idx] !== this.seq[idx]) {
+                    this.fail();
+                    return;
+                }
 
-        function startHack() {
-            document.getElementById('hacking-terminal').style.display = "none";
-            document.getElementById('hack-overlay').style.display = "flex";
-            
-            // Generate Grid
-            let grid = document.getElementById('hack-grid');
-            grid.innerHTML = "";
-            for(let i=0; i<9; i++) {
-                let d = document.createElement('div');
-                d.className = 'cell-hack';
-                d.id = 'hack-cell-'+i;
-                d.innerText = Math.floor(Math.random()*99);
-                d.onclick = () => checkHack(i);
-                grid.appendChild(d);
-            }
+                if (this.playerSeq.length === this.seq.length) {
+                    this.win();
+                }
+            },
 
-            // Sequence Logic
-            runHackSequence();
-        }
+            win() {
+                document.getElementById('hack-status').innerText = "ACESSO CONCEDIDO!";
+                document.getElementById('hack-status').style.color = "var(--success)";
+                AudioSys.playHackWin();
 
-        let hackSeq = [];
-        let playerSeq = [];
-        
-        async function runHackSequence() {
-            hackSeq = [];
-            playerSeq = [];
-            document.getElementById('hack-status').innerText = "OBSERVE O PADRÃO...";
-            
-            // Create sequence of 4
-            for(let i=0; i<4; i++) hackSeq.push(Math.floor(Math.random()*9));
+                Game.runtime.hackMultiplier = 10;
+                Game.runtime.hackTimer = 30;
+                Game.state.stats.hacks++;
 
-            // Play sequence
-            for(let id of hackSeq) {
-                await new Promise(r => setTimeout(r, 600));
-                let cell = document.getElementById('hack-cell-'+id);
-                cell.classList.add('lit');
-                AudioSys.playTone(600, 'sine', 0.1);
-                await new Promise(r => setTimeout(r, 300));
-                cell.classList.remove('lit');
-            }
-            
-            document.getElementById('hack-status').innerText = "REPITA O PADRÃO AGORA!";
-        }
+                setTimeout(() => document.getElementById('hack-overlay').style.display = "none", 1500);
+            },
 
-        function checkHack(id) {
-            playerSeq.push(id);
-            AudioSys.playTone(800, 'sine', 0.1);
-            
-            // Validate step
-            let idx = playerSeq.length - 1;
-            if (playerSeq[idx] !== hackSeq[idx]) {
-                // Fail
-                document.getElementById('hack-status').innerText = "FALHA DE ACESSO!";
+            fail() {
+                document.getElementById('hack-status').innerText = "FALHA DE SEGURANÇA!";
                 document.getElementById('hack-status').style.color = "var(--danger)";
                 AudioSys.playError();
                 setTimeout(() => document.getElementById('hack-overlay').style.display = "none", 1000);
-                return;
             }
+        };
 
-            // Success
-            if (playerSeq.length === hackSeq.length) {
-                document.getElementById('hack-status').innerText = "ACESSO CONCEDIDO! BONUS ATIVO!";
-                document.getElementById('hack-status').style.color = "var(--success)";
-                AudioSys.playHackWin();
-                hackMultiplier = 10;
-                hackTimer = 30; // 30 seconds bonus
-                setTimeout(() => document.getElementById('hack-overlay').style.display = "none", 1000);
-            }
-        }
-
-        /* --- UI RENDERERS --- */
-        function updateDisplays() {
-            document.getElementById('money-disp').innerText = formatMoney(game.money);
-            document.getElementById('prestige-disp').innerText = game.neuralData;
-            
-            let potential = Math.floor(Math.sqrt(game.money / 1000000));
-            document.getElementById('prestige-potential').innerText = "+" + potential + " ND";
-
-            document.getElementById('stat-time').innerText = Math.floor((Date.now() - game.startTime)/1000);
-            document.getElementById('stat-clicks').innerText = game.stats.clicks;
-            document.getElementById('stat-earnings').innerText = formatMoney(game.stats.earnings);
-
-            // Grey out expensive buttons
-            DB.buildings.forEach((b, i) => {
-                let el = document.getElementById('b-card-'+i);
-                if (el) {
-                     let discount = game.skills['cheaper'] ? 0.9 : 1.0;
-                     let cost = Math.floor(b.cost * Math.pow(1.15, game.buildings[i]) * discount);
-                     if (game.money < cost) el.style.opacity = 0.5; else el.style.opacity = 1;
-                }
-            });
-        }
-
-        function renderBuildings() {
-            let container = document.getElementById('buildings-list');
-            container.innerHTML = "";
-            DB.buildings.forEach((b, i) => {
-                let discount = game.skills['cheaper'] ? 0.9 : 1.0;
-                let cost = Math.floor(b.cost * Math.pow(1.15, game.buildings[i]) * discount);
-                
-                let div = document.createElement('div');
-                div.className = "card";
-                div.id = "b-card-"+i;
-                div.onclick = () => buyBuilding(i);
-                div.innerHTML = `
-                    <div class="card-icon">${b.icon}</div>
-                    <div class="card-info">
-                        <div class="card-name">${b.name}</div>
-                        <div class="card-cost">${formatMoney(cost)} CR$</div>
-                    </div>
-                    <div class="card-lvl">${game.buildings[i]}</div>
-                `;
-                container.appendChild(div);
-            });
-        }
-
-        function renderSkills() {
-            let container = document.getElementById('skills-list');
-            container.innerHTML = "";
-            DB.skills.forEach(s => {
-                let owned = game.skills[s.id];
-                let div = document.createElement('div');
-                div.className = "skill-node " + (owned ? "bought" : "");
-                div.onclick = () => buySkill(s.id);
-                div.innerHTML = `
-                    <div style="font-weight:bold; color:var(--accent)">${s.name}</div>
-                    <div style="font-size:0.7rem; margin: 5px 0;">${s.desc}</div>
-                    <div style="color:var(--danger)">${owned ? "ADQUIRIDO" : s.cost + " ND"}</div>
-                `;
-                container.appendChild(div);
-            });
-        }
-
-        function renderUI() {
-            renderBuildings();
-            renderSkills();
-        }
-
-        function setTab(id) {
-            ['infra', 'neural', 'sys'].forEach(t => document.getElementById('tab-'+t).style.display = 'none');
-            document.getElementById('tab-'+id).style.display = 'block';
-            document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
-            event.target.classList.add('active');
-        }
-
-        /* --- UTILS --- */
-        function formatMoney(n) {
-            if (n < 1000) return Math.floor(n);
-            let s = ["", "k", "M", "B", "T", "Qa"];
-            let t = Math.floor(Math.log10(n)/3);
-            return (n / Math.pow(10, t*3)).toFixed(2) + s[t];
-        }
-
-        function spawnParticle(x, y, txt) {
-            let p = document.createElement('div');
-            p.className = 'particle';
-            p.style.left = x + 'px';
-            p.style.top = y + 'px';
-            p.innerText = txt;
-            document.body.appendChild(p);
-            setTimeout(() => p.remove(), 800);
-        }
-
-        function toggleMute() {
-            AudioSys.muted = !AudioSys.muted;
-            document.getElementById('mute-btn').innerText = AudioSys.muted ? "🔇" : "🔊";
-        }
-
-        /* --- SAVING --- */
-        function saveGame(notify) {
-            localStorage.setItem('singularitySave', JSON.stringify(game));
-            if(notify) alert("Sistema Salvo!");
-        }
-        function loadGame() {
-            let d = localStorage.getItem('singularitySave');
-            if(d) {
-                let loaded = JSON.parse(d);
-                game = { ...game, ...loaded };
-                if (game.buildings.length < DB.buildings.length) game.buildings.push(0);
-            }
-        }
-        function hardReset() {
-            localStorage.removeItem('singularitySave');
-            location.reload();
-        }
     </script>
 </body>
 </html>
